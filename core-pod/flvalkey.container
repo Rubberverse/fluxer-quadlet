@@ -1,0 +1,40 @@
+[Unit]
+Description=Fluxer Valkey (Redis-compatible)
+Requires=flpostgres.service
+
+[Install]
+WantedBy=default.target
+
+[Service]
+Restart=on-failure
+SystemCallArchitectures=native
+MemoryDenyWriteExecute=false
+EnvironmentFile=%h/Fluxer/.sysenv
+TimeoutSec=10m
+TimeoutStopSec=10m
+
+[Container]
+Image=public.ecr.aws/valkey/valkey:trixie
+ContainerName=fluxer-valkey
+StopTimeout=9999
+Exec=valkey-server \
+    --appendonly yes \
+    --appendfsync everysec \
+    --dir /data \
+    --save \
+    --maxmemory 192mb \
+    --maxmemory-policy ${FLUXER_VALKEY_MAXMEMORY_POLICY}
+Volume=FLUXER_VALKEY_PERSIST:/data:U,Z
+HealthCmd=valkey-cli ping
+HealthInterval=10s
+HealthRetries=20
+HealthTimeout=5s
+Notify=healthy
+AutoUpdate=registry
+NoNewPrivileges=true
+DropCapability=all
+ReadOnly=true
+Memory=256M
+PodmanArgs=--memory-swap=0M
+User=1102:1102
+Pod=CORE.pod
