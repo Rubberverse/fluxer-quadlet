@@ -1,0 +1,32 @@
+[Unit]
+Description=Fluxer Messages Router
+Requires=fluxer-nats.service \
+         flpostgres.service
+After=fluxer-nats.service \
+      flpostgres.service
+BindsTo=fluxer-nats.service \
+        flpostgres.service
+
+[Install]
+WantedBy=default.target
+
+[Service]
+Restart=on-failure
+SystemCallArchitectures=native
+MemoryDenyWriteExecute=true
+
+[Container]
+Image=ghcr.io/fluxerapp/fluxer-messages:v1
+ContainerName=fluxer-messages
+EnvironmentFile=%h/Fluxer/.env
+Environment=FLUXER_SVC_NAME=messages
+Environment=FLUXER_SVC_MODE=combined
+Environment=FLUXER_SVC_PORT=8091
+Environment=FLUXER_POSTGRES_MAX_CONNECTIONS=20
+AutoUpdate=registry
+NoNewPrivileges=true
+DropCapability=all
+ReadOnly=true
+Memory=128M
+PodmanArgs=--memory-swap=0M
+Pod=NATS.pod
