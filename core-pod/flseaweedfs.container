@@ -1,0 +1,54 @@
+[Unit]
+Description=Fluxer SeaweedFS
+Requires=fluxer-generic-pod.service
+Before=fluxer-generic-pod.service
+
+[Install]
+WantedBy=default.target
+
+[Service]
+Restart=on-failure
+SystemCallArchitectures=native
+MemoryDenyWriteExecute=true
+Restart=on-failure
+TimeoutSec=10m
+TimeoutStopSec=10m
+EnvironmentFile=%h/Fluxer/.sysenv
+
+[Container]
+Image=public.ecr.aws/aikido-dev/chrislusf/seaweedfs:latest
+ContainerName=fluxer-seaweedfs
+StopTimeout=9999
+Environment=%h/Fluxer/.env
+Environment=GOMEMLIMIT=2560MiB
+Environment=GOMAXPROCS=1
+Environment=WEED_MASTER_VOLUME_GROWTH_COPY_1=1
+Environment=WEED_FILER_OPTIONS_MAX_FILE_NAME_LENGTH=1024
+Exec=server \
+    -s3 \
+    -s3.concurrentFileUploadLimit=5 \
+    -dir=/data \
+    -ip=127.0.0.1 \
+    -ip.bind=0.0.0.0 \
+    -volume.max=1000 \
+    -volume.index=leveldb \
+    -master.garbageThreshold=0.1 \
+    -master.telemetry=false \
+    -master.volumeSizeLimitMB=1024 \
+    -master.volumePreallocate=false \
+    -master.peers=127.0.0.1:9333 \
+    -master.raftHashicorp \
+    -master.raftBootstrap
+Volume=/srv/fluxer/seaweedfs:/data:U,Z
+HealthCmd=nc -z 127.0.0.1 9333
+HealthInterval=10s
+HealthRetries=90
+HealthTimeout=5s
+Notify=healthy
+AutoUpdate=registry
+NoNewPrivileges=true
+DropCapability=all
+Memory=4G
+PodmanArgs=--memory-swap=0M
+User=1100:1100
+Pod=CORE.pod
