@@ -1,0 +1,6 @@
+[Network]
+NetworkName=fluxer-core
+NetworkDeleteOnStop=false
+Driver=bridge
+Internal=true
+IPv6=true
