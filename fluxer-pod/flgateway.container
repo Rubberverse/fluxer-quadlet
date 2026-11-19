@@ -1,0 +1,41 @@
+[Unit]
+Description=Fluxer Gateway Service
+
+Requires=fluxer-nats-pod.service \
+         fluxer-core-pod.service
+
+After=fluxer-nats-pod.service \
+      fluxer-core-pod.service
+
+BindsTo=fluxer-nats-pod.service \
+        fluxer-core-pod.service
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Restart=on-failure
+SystemCallArchitectures=native
+MemoryDenyWriteExecute=false
+
+[Container]
+Image=ghcr.io/fluxerapp/fluxer-gateway:v1
+ContainerName=fluxer-gateway
+EnvironmentFile=%h/Fluxer/.env
+Environment=FLUXER_GATEWAY_PORT=7004
+Environment=FLUXER_ERLANG_DIST_PORT=7102
+Environment=FLUXER_GATEWAY_MEDIA_PROXY_ENDPOINT=https://chat.domain.com/media
+Environment=FLUXER_GATEWAY_STATIC_CDN_ENDPOINT=https://chat.domain.com
+Environment=FLUXER_ERLANG_SCHEDULERS_MIN=1
+Environment=FLUXER_ERLANG_SCHEDULERS_MAX=1
+HealthCmd=["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8777 && printf \"GET /_health/ready HTTP/1.0\\r\\nHost: 127.0.0.1\\r\\n\\r\\n\" >&3 && head -n 1 <&3 | grep -q \" 200 \"'"]
+HealthInterval=10s
+HealthRetries=30
+HealthTimeout=5s
+Notify=healthy
+AutoUpdate=registry
+NoNewPrivileges=true
+DropCapability=all
+Memory=1G
+PodmanArgs=--memory-swap=0M
+Pod=FLUXER.pod
