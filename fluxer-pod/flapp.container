@@ -15,7 +15,6 @@ MemoryDenyWriteExecute=false
 Image=ghcr.io/fluxerapp/fluxer-app-proxy-self-hosted:v1
 ContainerName=fluxer-app-proxy
 EnvironmentFile=%h/Fluxer/.env
-Environment=RUST_LOG=warn
 Environment=FLUXER_APP_PROXY_PORT=7100
 Environment=FLUXER_S3_BUCKET_UPLOADS=fluxer-uploads
 Environment=FLUXER_STATIC_CDN_ENDPOINT=http://fluxer-generic-pod:7102
