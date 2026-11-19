@@ -1,0 +1,47 @@
+[Unit]
+Description=Fluxer API Service
+Requires=fluxer-core-pod.service \
+         fluxer-nats-pod.service \
+         flcaddy.service \
+         flgateway.service \
+         fluxer-snowflakes.service
+# Worker needs to be After=, otherwise it crashes with a weird message
+After=fluxer-core-pod.service \
+      fluxer-nats-pod.service \
+      flcaddy.service
+Before=flgateway.service
+BindsTo=fluxer-core-pod.service \
+        fluxer-nats-pod.service \
+        flcaddy.service
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Restart=on-failure
+SystemCallArchitectures=native
+MemoryDenyWriteExecute=false
+
+[Container]
+Image=ghcr.io/fluxerapp/fluxer-api:v1
+ContainerName=fluxer-api
+Exec=node --optimize_for_size dist/AppEntrypoint.js
+EnvironmentFile=%h/Fluxer/.env
+Environment=FLUXER_API_PORT=8080
+Environment=NODE_OPTIONS="--max-semi-space-size=16 --max-old-space-size-percentage=50"
+Environment=NODE_EXTRA_CA_CERTS="/etc/ssl/certs/ca-certificates.crt"
+Environment=FLUXER_POSTGRES_MAX_CONNECTIONS=25
+Environment=FLUXER_API_PRESIGNED_ATTACHMENT_UPLOADS_ENABLED=true
+Environment=FLUXER_API_EMBEDDED_WORKER=true
+HealthCmd=["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8777 && printf \"GET /_health HTTP/1.0\\r\\nHost: 127.0.0.1\\r\\n\\r\\n\" >&3 && head -n 1 <&3 | grep -q \" 200 \"'"]
+HealthInterval=10s
+HealthRetries=30
+HealthTimeout=5s
+Notify=healthy
+AutoUpdate=registry
+NoNewPrivileges=true
+DropCapability=all
+ReadOnly=true
+Memory=2.5G
+PodmanArgs=--memory-swap=0M
+Pod=FLUXER.pod
