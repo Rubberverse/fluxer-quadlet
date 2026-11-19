@@ -1,0 +1,43 @@
+[Unit]
+Description=Fluxer Media Proxy
+Requires=fluxer-nats-pod.service \
+         fluxer-core-pod.service \
+         flcaddy.service
+
+Before=flcaddy.service
+After=fluxer-nats-pod.service \
+      fluxer-core-pod.service
+
+BindsTo=fluxer-nats-pod.service \
+        fluxer-core-pod.service
+
+[Install]
+WantedBy=default.target
+
+[Service]
+Restart=on-failure
+SystemCallArchitectures=native
+MemoryDenyWriteExecute=false
+
+[Container]
+Image=ghcr.io/fluxerapp/fluxer-media-proxy:v1
+ContainerName=fluxer-media-proxy
+EnvironmentFile=%h/Fluxer/.env
+Environment=FLUXER_MEDIA_PROXY_PORT=7101
+Environment=TOKIO_WORKER_THREADS=2
+Environment=FLUXER_MEDIA_PROXY_MODE=upload
+Environment=FLUXER_MEDIA_PROXY_STORAGE_BACKEND=s3
+Environment=FLUXER_S3_READ_SIGNED=true
+Tmpfs=/tmp:rw,size=4G,noexec,nosuid,nodev
+AutoUpdate=registry
+NoNewPrivileges=true
+DropCapability=all
+ReadOnly=true
+Memory=4G
+HealthCmd=["CMD", "/usr/local/bin/fluxer-media-proxy", "healthcheck"]
+HealthInterval=10s
+HealthRetries=30
+HealthTimeout=5s
+Notify=healthy
+PodmanArgs=--memory-swap=0M
+Pod=FLUXER.pod
