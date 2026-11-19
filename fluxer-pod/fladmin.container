@@ -1,0 +1,42 @@
+[Unit]
+Description=Fluxer Admin Panel
+Requires=fluxer-core-pod.service \
+         flapi.service \
+         flcaddy.service
+After=fluxer-core-pod.service \
+      flapi.service \
+      flcaddy.service
+BindsTo=fluxer-core-pod.service \
+        flapi.service
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Restart=on-failure
+SystemCallArchitectures=native
+MemoryDenyWriteExecute=false
+
+[Container]
+Image=ghcr.io/fluxerapp/fluxer-admin:v1
+ContainerName=fluxer-admin
+EnvironmentFile=%h/Fluxer/.env
+Environment=FLUXER_ADMIN_PORT=7005
+Environment=FLUXER_ADMIN_BASE_PATH=/admin
+Environment=FLUXER_API_ENDPOINT=http://fluxer-generic-pod:8080
+# api: FEATURE_TEMPORARILY_DISABLED but it's here for the future.
+#Environment=FLUXER_ADMIN_SSO_ISSUER=https://auth.domain.com
+#Environment=FLUXER_ADMIN_SSO_CLIENT_ID=
+#Environment=FLUXER_ADMIN_SSO_CLIENT_SECRET=
+#Environment=FLUXER_ADMIN_SSO_ONLY=true
+HealthCmd=["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8777 && printf \"GET /_health HTTP/1.0\\r\\n\\r\\n\" >&3 && head -n 1 <&3 | grep -q \" 200 \"'"]
+HealthInterval=10s
+HealthRetries=30
+HealthTimeout=5s
+Notify=healthy
+AutoUpdate=registry
+NoNewPrivileges=true
+DropCapability=all
+ReadOnly=true
+Memory=64M
+Pod=FLUXER.pod
