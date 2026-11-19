@@ -1,0 +1,54 @@
+{
+        admin 127.0.0.1:2026
+        servers {
+                trusted_proxies static 10.0.0.0/8 10.100.1.2/32
+                trusted_proxies_strict
+        }
+}
+:8777 {
+        handle /_health {
+                header -Via
+                respond "OK" 200
+        }
+        handle_path /api/* {
+                header -Via
+                reverse_proxy fluxer-generic-pod:8080
+        }
+        handle /gateway {
+                header -Via
+                rewrite * /
+                reverse_proxy fluxer-generic-pod:7004
+        }
+        handle_path /media/* {
+                header -Via
+                reverse_proxy fluxer-generic-pod:7101
+        }
+        handle /admin {
+                header -Via
+                rewrite * /
+                reverse_proxy fluxer-generic-pod:7005
+        }
+        handle_path /admin/* {
+                header -Via
+                reverse_proxy fluxer-generic-pod:7005
+        }
+        @staticAssets path /web/* /emoji/* /libs/* /avatars/* /badges/* /desktop/*
+        handle @staticAssets {
+                header -Via
+                reverse_proxy fluxer-generic-pod:8081
+        }
+        handle /.well-known/fluxer {
+                header -Via
+                reverse_proxy fluxer-generic-pod:8080
+        }
+        handle {
+                header -Via
+                reverse_proxy fluxer-generic-pod:7100
+        }
+}
+:8088 {
+        handle /.well-known/fluxer {
+                header -Via
+                reverse_proxy fluxer-generic-pod:8080
+        }
+}
