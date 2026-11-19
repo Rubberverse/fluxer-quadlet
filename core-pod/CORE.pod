@@ -1,0 +1,14 @@
+[Unit]
+PartOf=fluxer-nats-pod.service \
+       fluxer-generic-pod.service
+Requires=fluxer-nats.service \
+         fluxer-generic-pod.service
+Before=fluxer-nats-pod.service \
+       fluxer-generic-pod.service
+
+[Pod]
+PodName=fluxer-core-pod
+ServiceName=fluxer-core-pod
+Network=fluxer-core.network
+PodmanArgs=--cpus=2
+UserNS=auto:size=65535
