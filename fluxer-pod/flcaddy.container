@@ -1,0 +1,26 @@
+[Unit]
+Description=Caddy Reverse Proxy for Fluxer
+
+[Install]
+WantedBy=default.target
+
+[Service]
+Restart=on-failure
+SystemCallArchitectures=native
+MemoryDenyWriteExecute=true
+
+[Container]
+Image=ghcr.io/rubberverse/qor-caddy:latest-vanilla
+ContainerName=fluxer-caddy
+Timezone=Europe/Warsaw
+Exec=run --config /app/configs/caddyfile
+Volume=/srv/fluxer/caddy/caddyfile:/app/configs/caddyfile:ro,Z,noexec,nosuid,nodev
+Volume=FLUXER_CADDY_DATA:/app/.local/share/caddy:U,Z,noexec,nosuid,nodev
+Volume=FLUXER_CADDY_CONF:/app/.config/caddy:U,Z,noexec,nosuid,nodev
+AutoUpdate=registry
+NoNewPrivileges=true
+DropCapability=all
+ReadOnly=true
+Memory=128M
+PodmanArgs=--memory-swap=0M
+Pod=FLUXER.pod
