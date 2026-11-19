@@ -1,0 +1,31 @@
+[Unit]
+Description=Fluxer Push Relay
+Requires=fluxer-nats.service fluxer-generic-pod.service flcaddy.service
+After=fluxer-nats.service fluxer-generic-pod.service flcaddy.service
+BindsTo=fluxer-nats.service fluxer-generic-pod.service flcaddy.service
+
+[Install]
+WantedBy=default.target
+
+[Service]
+Restart=on-failure
+SystemCallArchitectures=native
+MemoryDenyWriteExecute=false
+
+[Container]
+Image=ghcr.io/fluxerapp/fluxer-push:v1
+ContainerName=fluxer-push
+EnvironmentFile=%h/Fluxer/.env
+# idfk anymore if it was 1000 or 10000
+Environment=FLUXER_PUSH_SERVICE_QUEUE_CAPACITY=10000
+Environment=FLUXER_PUSH_SERVICE_SEND_CONCURRENCY=25
+Environment=FLUXER_FCM_BASE_URL=https://fcm.googleapis.com
+Environment=FLUXER_PUSH_SERVICE_MANAGED_RELAY_HOSTS=push.fluxer.com
+Environment=FLUXER_PUSH_RELAY_CONSENT_ACCEPTED=true
+AutoUpdate=registry
+NoNewPrivileges=true
+DropCapability=all
+ReadOnly=true
+Memory=128M
+PodmanArgs=--memory-swap=0M
+Pod=NATS.pod
