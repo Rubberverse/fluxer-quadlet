@@ -1,0 +1,50 @@
+[Unit]
+Description=Fluxer NATS
+
+Requires=fluxer-generic-pod.service \
+         fluxer-users.service \
+         fluxer-unfurl.service \
+         fluxer-snowflakes.service \
+         fluxer-gifs.service \
+         fluxer-push.service
+
+Before=fluxer-generic-pod.service \
+       flapi.service \
+       flgateway.service \
+       fluxer-users.service \
+       fluxer-unfurl.service \
+       fluxer-snowflakes.service \
+       fluxer-gifs.service \
+       fluxer-push.service
+
+BindsTo=fluxer-users.service \
+        fluxer-unfurl.service \
+        fluxer-snowflakes.service \
+        fluxer-gifs.service \
+        fluxer-push.service
+
+[Install]
+WantedBy=default.target
+
+[Service]
+Restart=on-failure
+SystemCallArchitectures=native
+MemoryDenyWriteExecute=true
+EnvironmentFile=%h/Fluxer/.sysenv
+
+[Container]
+Image=public.ecr.aws/docker/library/nats:scratch
+ContainerName=fluxer-nats
+Timezone=Europe/Warsaw
+Environment=GOMEMLIMIT=200MiB
+Exec=--jetstream --config /config/nats.conf
+Volume=/srv/fluxer/nats:/data:U,Z,nosuid,nodev,noexec
+Volume=/srv/fluxer/nats.conf:/config/nats.conf:ro,Z,nosuid,nodev,noexec
+AutoUpdate=registry
+NoNewPrivileges=true
+DropCapability=all
+ReadOnly=true
+Memory=256MB
+PodmanArgs=--memory-swap=0M
+Pod=NATS.pod
+User=1100:1100
