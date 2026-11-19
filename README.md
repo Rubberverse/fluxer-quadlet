@@ -1,3 +1,5 @@
+fyi: still not instantly usable out of the box as whole .env is missing and I have not finished making it more generic in terms of configuration.
+
 # README
 
 This is my new improved attempt at spinning up a reliable, easy to maintain Quadlet configuration for [Fluxer]().
